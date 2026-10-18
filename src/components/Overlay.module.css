@@ -1,0 +1,414 @@
+/* ── Landing ── */
+.landing {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; pointer-events: none;
+}
+.landingInner {
+  text-align: center; pointer-events: all;
+  animation: fadeIn 1.2s ease both;
+}
+.subtitle {
+  font-family: 'Geologica', 'Segoe UI', sans-serif;
+  font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); margin-bottom: 8px;
+}
+.title {
+  font-family: 'Play', 'Segoe UI', sans-serif;
+  font-size: clamp(48px, 8vw, 96px); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-right: -0.06em;   /* компенсирует разрядку после последней буквы — слово ровно по центру */
+  background: linear-gradient(135deg, #fff 30%, #aaddff 70%, #5588ff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 12px; line-height: 1;
+}
+.hint {
+  /* рукописный Pacifico мельче на вид — поэтому чуть крупнее и светлее прежних 15px / 0.4 */
+  font-family: 'Pacifico', cursive;
+  font-size: 18px; color: rgba(255,255,255,0.55); margin-bottom: 48px; letter-spacing: 0.3px;
+}
+/* части подзаголовка с ролями (не путать с .hintSep — разделителем в подсказке W/S) */
+.rolePart { white-space: nowrap; }
+/* на узком экране — две аккуратные строки: роль / «Dreamer · Concept Creator» */
+@media (max-width: 600px) {
+  .landingInner { padding: 0 16px; }
+  .roleSep { display: none; }
+  .rolePart { display: block; }
+}
+.enterBtn {
+  font-family: 'Geologica', 'Segoe UI', sans-serif;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 13px 34px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 50px; color: #fff; font-size: 15px; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s; backdrop-filter: blur(8px);
+}
+.enterBtn:hover {
+  background: rgba(170,221,255,0.1); border-color: rgba(170,221,255,0.5);
+  box-shadow: 0 0 30px rgba(100,180,255,0.15); transform: translateY(-1px);
+}
+.arrow { transition: transform 0.3s; }
+.enterBtn:hover .arrow { transform: translateX(4px); }
+
+/* ── Кнопки по центру сверху ── */
+.topBar {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 40;
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center;
+  width: max-content; max-width: calc(100vw - 32px);
+}
+/* переключатель языка — сегменты в одной «таблетке» */
+.langSwitch {
+  display: flex; padding: 3px; gap: 2px; border-radius: 50px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+}
+.langBtn {
+  padding: 5px 11px; border-radius: 50px; border: 0; cursor: pointer;
+  background: transparent; color: rgba(255,255,255,0.55);
+  font-size: 12px; letter-spacing: 1px; font-family: 'Geologica', 'Segoe UI', sans-serif; transition: all 0.2s;
+}
+.langBtn:hover { color: #fff; }
+.langBtnActive { background: rgba(170,221,255,0.18); color: #fff; }
+.langBtn:focus-visible { outline: 2px solid #aaddff; outline-offset: 1px; }
+.topBtn {
+  padding: 8px 18px; border-radius: 50px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.85); font-size: 13px; letter-spacing: 0.5px;
+  backdrop-filter: blur(8px); transition: all 0.25s; font-family: 'Geologica', 'Segoe UI', sans-serif;
+}
+.topBtn:hover {
+  background: rgba(170,221,255,0.1); border-color: rgba(170,221,255,0.5);
+  box-shadow: 0 0 20px rgba(100,180,255,0.15);
+}
+.topBtnCat { border-color: rgba(232,190,120,0.35); color: #f3dcb0; }
+.topBtnCat:hover { background: rgba(232,190,120,0.1); border-color: rgba(232,190,120,0.6); box-shadow: 0 0 20px rgba(232,170,90,0.15); }
+.topBtnAccent { background: rgba(255,184,230,0.1); border-color: rgba(255,184,230,0.45); color: #ffd6f0; }
+.topBtnAccent:hover { background: rgba(255,184,230,0.18); border-color: rgba(255,184,230,0.7); box-shadow: 0 0 20px rgba(255,150,220,0.2); }
+.topBtn:focus-visible { outline: 2px solid #aaddff; outline-offset: 2px; }
+
+/* ── Fast check: все разделы в одном окне ── */
+.fastBackdrop {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 72px 16px 40px;
+  animation: fadeIn 0.3s ease both;
+}
+.fastPanel {
+  width: 100%; max-width: 620px;
+  background: rgba(4,8,22,0.92);
+  border: 1px solid rgba(170,221,255,0.18); border-radius: 20px;
+  padding: 32px 36px; box-shadow: 0 0 80px rgba(0,0,0,0.6);
+}
+.fastHead { display: flex; align-items: center; justify-content: space-between; }
+.fastHead .stationTitle { margin-bottom: 8px; }
+.fastClose {
+  font-family: 'Geologica', 'Segoe UI', sans-serif;
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7); font-size: 20px; line-height: 1;
+}
+.fastClose:hover { border-color: rgba(170,221,255,0.5); color: #fff; }
+.fastSection {
+  padding: 22px 0 6px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 18px;
+}
+.fastTitle {
+  font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--star, #aaddff); margin-bottom: 14px; font-weight: 600;
+}
+
+/* ── Crosshair ── */
+.crosshair {
+  position: fixed; top: 50%; left: 50%; z-index: 5;
+  transform: translate(-50%, -50%); pointer-events: none;
+}
+.crosshairH {
+  width: 20px; height: 1px;
+  background: rgba(255,255,255,0.4);
+  position: absolute; top: 0; left: -10px;
+}
+.crosshairV {
+  width: 1px; height: 20px;
+  background: rgba(255,255,255,0.4);
+  position: absolute; top: -10px; left: 0;
+}
+
+/* ── Controls hint ── */
+.hintBox {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  z-index: 20; display: flex; align-items: center; gap: 10px;
+  background: rgba(5,10,30,0.7); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px; padding: 10px 20px; backdrop-filter: blur(12px);
+  cursor: pointer; animation: fadeIn 0.5s ease both;
+  color: rgba(255,255,255,0.55); font-size: 13px; letter-spacing: 0.5px;
+}
+.hintKey {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 6px; padding: 3px 10px; color: #fff; font-size: 13px;
+  font-weight: 600; letter-spacing: 1px;
+}
+.hintSep {
+  width: 1px; height: 16px; background: rgba(255,255,255,0.15); margin: 0 4px;
+}
+.hintClose {
+  margin-left: 8px; font-size: 11px; color: rgba(255,255,255,0.25);
+}
+
+/* ── Path indicator (right side) ── */
+.pathIndicator {
+  position: fixed; right: 32px; top: 50%; transform: translateY(-50%);
+  z-index: 20; display: flex; flex-direction: column; gap: 20px; align-items: flex-end;
+}
+.pathDot {
+  display: flex; align-items: center; gap: 10px;
+  opacity: 0.35; transition: opacity 0.4s;
+}
+.pathDot::after {
+  content: ''; width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.5); transition: all 0.4s;
+  flex-shrink: 0;
+}
+.pathDotActive { opacity: 1; }
+.pathDotActive::after {
+  background: #aaddff; box-shadow: 0 0 10px rgba(170,221,255,0.8);
+  width: 10px; height: 10px;
+}
+.pathDotPassed { opacity: 0.2; }
+.pathDotPassed::after { background: rgba(170,221,255,0.3); }
+/* временная навигация по разделам (NAV_LINKS_ENABLED) */
+.pathDotLink { cursor: pointer; }
+.pathDotLink:hover, .pathDotLink:focus-visible { opacity: 0.9; outline: none; }
+.pathLabel {
+  font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Station Panel ── */
+.stationPanel {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 30;
+  max-width: 520px; width: 90%;
+  background: rgba(4,8,22,0.82);
+  border: 1px solid rgba(170,221,255,0.18);
+  border-radius: 20px; padding: 40px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 0 60px rgba(80,140,255,0.1), 0 0 120px rgba(0,0,0,0.6);
+  animation: panelIn 0.6s cubic-bezier(0.34,1.4,0.64,1) 0.12s both;
+  border-top-color: var(--star, rgba(170,221,255,0.18));
+}
+.stationTitle {
+  font-size: 26px; font-weight: 600; margin-bottom: 24px;
+  background: linear-gradient(90deg, #fff 40%, #aaddff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ── Новая плашка (гибрид K + L): шапка с прогрессом, цифра-водяной знак, «next» внизу.
+   Цвет — графит и белый, без цветных акцентов ── */
+.panelV2 {
+  padding: 0; border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.13);
+  background: rgba(18,18,20,0.9);
+  box-shadow: 0 0 120px rgba(0,0,0,0.6);
+}
+.v2Mark {
+  position: absolute; right: 22px; bottom: 34px; z-index: 0; pointer-events: none;
+  font-size: 150px; font-weight: 500; line-height: 1; letter-spacing: -4px;
+  color: rgba(255,255,255,0.05);
+}
+.v2Head {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.v2Zone { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+.v2Dots { display: flex; gap: 6px; align-items: center; }
+.v2Dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+.v2Dots i.v2DotOn { background: rgba(255,255,255,0.55); }
+.v2Dots i.v2DotNow { width: 18px; border-radius: 3px; background: #fff; }
+.v2Body { position: relative; z-index: 1; padding: 24px 28px 28px; }
+.v2Title { font-size: 28px; font-weight: 500; color: #fff; margin: 0 0 18px; }
+.v2Foot {
+  position: relative; z-index: 1;
+  padding: 11px 24px; border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px; text-align: right; color: rgba(255,255,255,0.45);
+}
+.v2Foot span { color: #fff; }
+/* поля и кнопки внутри — тоже без голубого */
+.panelV2 .stationForm input:focus,
+.panelV2 .stationForm textarea:focus {
+  border-color: rgba(255,255,255,0.35); box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+}
+.panelV2 .stationForm button {
+  color: #fff; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.3);
+}
+.panelV2 .stationForm button:hover { background: rgba(255,255,255,0.12); box-shadow: none; }
+/* содержимое разделов — в той же графитовой гамме */
+.panelV2 .projectCard:hover { border-color: rgba(255,255,255,0.25); }
+.panelV2 .skillTag { border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.8); }
+.panelV2 .panelSub { color: rgba(255,255,255,0.55); }
+.panelV2 .designTile { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
+.panelV2 .designTile:hover { border-color: rgba(255,255,255,0.35); }
+.panelV2 .designWork { background: #111; }
+
+/* ── About: приветствие ── */
+.helloLine { font-size: 20px; font-weight: 500; color: #fff; margin: -6px 0 -4px; }
+/* ── Contact: ошибка формы ── */
+.formError { font-size: 13px; color: #ff9a9a; margin: -8px 0 0; }
+
+/* ── About: короткий путь по годам ── */
+.timeline { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 6px; }
+.timelineRow { display: flex; gap: 16px; align-items: baseline; }
+.timelineYear { min-width: 64px; font-size: 13px; color: rgba(255,255,255,0.45); font-variant-numeric: tabular-nums; }
+/* новая глава — смена профессии: отделена линией снизу, год ярче */
+.timelineNext { padding-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.18); }
+.timelineNext .timelineYear { color: #fff; }
+
+/* ── Contact: прямые контакты ── */
+.contactLinks { display: flex; flex-wrap: wrap; gap: 8px; }
+.contactLinks a {
+  font-size: 13px; color: #fff; text-decoration: none;
+  padding: 7px 14px; border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04);
+  transition: background 0.2s, border-color 0.2s;
+}
+.contactLinks a:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.35); }
+
+/* ── Station Form ── */
+.stationForm {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.stationIntro {
+  color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.6; margin-bottom: 4px;
+}
+.stationForm label {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 13px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px;
+}
+.stationForm input,
+.stationForm textarea {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; padding: 10px 14px;
+  color: #fff; font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit; resize: vertical;
+}
+.stationForm input:focus,
+.stationForm textarea:focus {
+  border-color: rgba(170,221,255,0.4);
+  box-shadow: 0 0 0 3px rgba(100,180,255,0.08);
+}
+.stationForm button {
+  font-family: 'Geologica', 'Segoe UI', sans-serif;
+  align-self: flex-start; padding: 10px 24px;
+  background: rgba(170,221,255,0.1); border: 1px solid rgba(170,221,255,0.3);
+  border-radius: 50px; color: #aaddff; font-size: 14px; letter-spacing: 0.5px;
+  cursor: pointer; transition: all 0.25s;
+}
+.stationForm button:hover {
+  background: rgba(170,221,255,0.18); box-shadow: 0 0 20px rgba(100,180,255,0.15);
+}
+/* «Experience again» — второстепенная: без заливки, с иконкой разворота */
+.stationForm .againBtn {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: -6px;
+  background: transparent; border-color: rgba(255,255,255,0.16); color: rgba(255,255,255,0.7);
+}
+.stationForm .againBtn:hover { color: #fff; background: rgba(255,255,255,0.06); box-shadow: none; }
+.stationForm .againBtn svg { transition: transform 0.4s; }
+.stationForm .againBtn:hover svg { transform: rotate(-180deg); }
+
+/* ── Projects ── */
+.projectList { display: flex; flex-direction: column; gap: 12px; }
+.projectCard {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 16px; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; background: rgba(255,255,255,0.02);
+  transition: border-color 0.2s;
+}
+.projectCard:hover { border-color: rgba(170,221,255,0.25); }
+/* карточка-ссылка (проект на GitHub) */
+.projectLink { text-decoration: none; cursor: pointer; }
+.projectName { font-size: 14px; font-weight: 600; color: #fff; }
+.projectDesc { font-size: 13px; color: rgba(255,255,255,0.45); }
+
+/* ── Skills ── */
+.skillGrid { display: flex; flex-wrap: wrap; gap: 10px; }
+.skillTag {
+  padding: 6px 16px; border: 1px solid rgba(170,221,255,0.2);
+  border-radius: 50px; font-size: 13px;
+  color: rgba(255,255,255,0.7); background: rgba(170,221,255,0.05);
+}
+
+/* ── Education & Languages ── */
+.eduWrap { display: flex; flex-direction: column; gap: 4px; }
+.eduWrap > div:first-child > .panelSub { margin-top: 0; }   /* первая группа навыков — сразу под заголовком */
+.panelSub {
+  font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+  color: var(--star, #aaddff); margin: 18px 0 10px;
+}
+
+/* ── Designs: сетка работ ── */
+.designGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.designTile {
+  aspect-ratio: 4 / 3; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, rgba(127,240,224,0.08), rgba(159,199,255,0.04));
+  transition: border-color 0.2s;
+}
+.designTile:hover { border-color: var(--star, rgba(170,221,255,0.4)); }
+.designTile span { font-size: 14px; font-weight: 600; color: #fff; }
+.designTile small { font-size: 12px; color: rgba(255,255,255,0.4); }
+/* плитка с работой: превью во всю плитку, подпись внизу */
+.designWork { position: relative; overflow: hidden; padding: 0; text-decoration: none; background: #111; }
+/* превью приближено (--zoom) к самому характерному месту работы (--origin) */
+.designWork img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--origin, 4% 4%); transform: scale(var(--zoom, 1.7)); transform-origin: var(--origin, 4% 4%); transition: transform 0.4s; }
+.designWork:hover img { transform: scale(calc(var(--zoom, 1.7) * 1.08)); }
+.designWork .designCaption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 12px;
+  font-size: 12px; font-weight: 500; color: #fff; background: rgba(0,0,0,0.65);
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes panelIn {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.15); filter: blur(10px) brightness(2); }
+  60%  { opacity: 1; filter: blur(0) brightness(1.3); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: none; }
+}
+
+/* ── Вспышка звезды перед появлением панели ── */
+.starFlash {
+  position: fixed; top: 50%; left: 50%; z-index: 29;
+  width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, var(--star, #aaddff) 28%, transparent 70%);
+  pointer-events: none;
+  animation: starFlash 0.9s ease-out forwards;
+}
+@keyframes starFlash {
+  0%   { transform: scale(0.2); opacity: 1; }
+  35%  { opacity: 0.9; }
+  100% { transform: scale(16); opacity: 0; }
+}
+
+/* ── Относительный масштаб интерфейса ──
+   --ui считается в App.jsx от размера экрана: 1 на компьютере, ~0.5 на телефоне в альбомной
+   ориентации. zoom уменьшает элементы целиком — шрифты, отступы, скругления — пропорционально */
+.landingInner, .topBar, .hintBox, .pathIndicator, .stationPanel, .fastPanel, .starFlash {
+  zoom: var(--ui, 1);
+}
+/* карточка не выше экрана: длинное содержимое прокручивается внутри */
+.stationPanel { max-height: calc(86vh / var(--ui, 1)); overflow-y: auto; }
+
+/* на телефоне и низких экранах — индикатор разделов одними точками, без подписей */
+@media (max-height: 500px), (pointer: coarse) {
+  .pathLabel { display: none; }
+  .pathIndicator { gap: 14px; }
+}
+/* на сенсорных экранах не выделяем текст при удержании пальца (поля ввода — можно) */
+@media (pointer: coarse) {
+  .landing, .stationPanel, .pathIndicator, .hintBox, .topBar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .stationPanel input, .stationPanel textarea { -webkit-user-select: text; user-select: text; }
+}

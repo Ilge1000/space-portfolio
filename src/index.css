@@ -1,0 +1,43 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: #000;
+  color: #fff;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  display: block;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* «Поверните телефон»: только на сенсорных устройствах в портретной ориентации */
+.rotateHint {
+  display: none;
+  position: fixed; inset: 0; z-index: 1000;
+  flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: #02040c; color: #fff; text-align: center; padding: 24px;
+  font-family: 'Geologica', 'Segoe UI', sans-serif;
+}
+.rotateHint p { font-size: 18px; }
+.rotateHint small { font-size: 13px; color: rgba(255,255,255,0.5); }
+.rotateHintIcon { font-size: 48px; animation: rotateHintTurn 2s ease-in-out infinite; }
+@keyframes rotateHintTurn {
+  0%, 30%   { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+@media (orientation: portrait) and (pointer: coarse) {
+  .rotateHint { display: flex; }
+}
