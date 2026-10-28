@@ -407,6 +407,28 @@
   .pathLabel { display: none; }
   .pathIndicator { gap: 14px; }
 }
+/* Низкий экран (телефон в альбомной ориентации): карточка шире и ниже — содержимое в две колонки,
+   без большой цифры на фоне, отступы компактнее. Шрифт не уменьшаем, чтобы текст читался */
+@media (max-height: 500px) {
+  .panelV2 { max-width: calc(80vw / var(--ui, 1)); width: calc(80vw / var(--ui, 1)); max-height: calc(82vh / var(--ui, 1)); }
+  .panelV2 .v2Mark { display: none; }
+  .panelV2 .v2Head { padding: 10px 22px; }
+  .panelV2 .v2Body { padding: 16px 24px 18px; }
+  .panelV2 .v2Title { font-size: 24px; margin-bottom: 12px; }
+  .panelV2 .v2Foot { padding: 8px 22px; }
+  /* навыки, учёба: группы раскладываются по двум колонкам */
+  .panelV2 .eduWrap { display: block; columns: 2; column-gap: 32px; }
+  .panelV2 .eduWrap > * { break-inside: avoid; }
+  .panelV2 .eduWrap > div:first-child > .panelSub, .panelV2 .eduWrap > .panelSub { margin-top: 0; }
+  .panelV2 .eduWrap > .projectList { margin-bottom: 12px; }
+  .panelV2 .projectList { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .panelV2 .eduWrap .projectList { grid-template-columns: 1fr; }
+  .panelV2 .designGrid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .panelV2 .timeline { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+  .panelV2 .timelineNext { grid-column: 1 / -1; }
+  /* формы (Contact) — плотнее */
+  .panelV2 .stationForm { gap: 12px; }
+}
 /* на сенсорных экранах не выделяем текст при удержании пальца (поля ввода — можно) */
 @media (pointer: coarse) {
   .landing, .stationPanel, .pathIndicator, .hintBox, .topBar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
