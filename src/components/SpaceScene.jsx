@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei'
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js'
 import * as THREE from 'three'
 import { STATION_MARKS, STATION_RANGE, DOLPHIN_STOP_Z, CAMERA_END_Z, messengerTriggerZ } from '../stations'
-import { getPath, samplePath, WATER_MODELS, routeStart, routeHold, SEA_CHAIN, seaChain, resetSeaChain } from '../trajectories'
+import { getPath, samplePath, WATER_MODELS, routeStart, routeHold, routeTimeOnly, SEA_CHAIN, seaChain, resetSeaChain } from '../trajectories'
 
 // файлы из public/ — от адреса сайта (на GitHub Pages он не корень домена, а /space-portfolio/)
 const ASSET = import.meta.env.BASE_URL
@@ -388,9 +388,9 @@ const SEA_OBJECTS = [
   { url: ASSET + 'models/sailboat.glb',   pos: [-18,   -3.75, -517], pathId: 'sailboat', follow: { gap: 10, side: 6 }, rot: [0, 0.45, 0], scale: 1.3, count: 2600, anim: 'bob' },
   // три дельфина по очереди перепрыгивают линию пути (x считается от пути, pos[0] не используется)
   // в одном месте, по одной дуге друг за другом; камера замирает перед ними на DOLPHIN_STOP_Z (уже над водой)
-  { url: ASSET + 'models/dolphin.glb',    pos: [  0, -4.6,  -488],   rot: [0, 0, 0],   scale: 2.4, count: 3000, anim: 'leap', leapDelay: 0 },
-  { url: ASSET + 'models/dolphin.glb',    pos: [  0, -4.6,  -488.6], rot: [0, 0, 0],   scale: 2.2, count: 3000, anim: 'leap', leapDelay: 1 },
-  { url: ASSET + 'models/dolphin.glb',    pos: [  0, -4.6,  -487.4], rot: [0, 0, 0],   scale: 2.0, count: 3000, anim: 'leap', leapDelay: 2 },
+  { url: ASSET + 'models/dolphin.glb',    pos: [  0, -4.6,  -486],   rot: [0, 0, 0],   scale: 2.4, count: 3000, anim: 'leap', leapDelay: 0 },
+  { url: ASSET + 'models/dolphin.glb',    pos: [  0, -4.6,  -489.5], rot: [0, 0, 0],   scale: 2.2, count: 3000, anim: 'leap', leapDelay: 1 },
+  { url: ASSET + 'models/dolphin.glb',    pos: [  0, -4.6,  -493],   rot: [0, 0, 0],   scale: 2.0, count: 3000, anim: 'leap', leapDelay: 2 },
   { url: ASSET + 'models/turtle.glb',     pos: WATER_MODELS.turtle.pos, pathId: 'turtle', rot: [0,  0.9,  0], scale: 2.0, count: 3500, anim: 'swim'  },
   // стайка: впереди три большие черепахи в ряд (первая — по нарисованному пути, две по бокам),
   // за ними две маленькие (follow — как у парусников: gap — отставание по пути, side — сдвиг вбок,
@@ -567,7 +567,7 @@ function LighthouseBeam() {
 // LEAP_STAGGER друг от друга (leapDelay = 0, 1, 2…). Прыжок запускается остановкой
 // камеры перед ними, до этого дельфины скрыты. Вылетают слева от пути и ныряют справа.
 const LEAP_JUMP     = 1.6                      // с — один прыжок
-const LEAP_STAGGER  = 0.45                     // с — отставание следующего дельфина
+const LEAP_STAGGER  = 0.7                      // с — отставание следующего дельфина
 const LEAP_HALF     = 9                        // полуширина прыжка поперёк пути
 const LEAP_HEIGHT   = 3.2
 const WATER_Y       = -4
@@ -670,13 +670,22 @@ function routeEndAt(pathId) {
   return routeStart[pathId] + (WATER_MODELS[pathId]?.duration ?? 12) * (len + (ROUTE_MAX_GAP[pathId] ?? 0)) / len
 }
 
-// пора ли трогаться модели из морской цепочки
-function chainReady(pathId, now) {
+// насколько камера прошла участок пути этой группы (WATER_MODELS[id].camZ): 0…1, или 0 без участка
+function camProgress(pathId, camZ) {
+  const w = WATER_MODELS[pathId]?.camZ
+  if (!w || routeTimeOnly[pathId]) return 0
+  return clamp((w[0] - camZ) / (w[0] - w[1]), 0, 1)
+}
+
+// пора ли трогаться модели из морской цепочки: предыдущая группа растаяла (по времени или камера
+// прошла её участок), либо камера уже на участке этой группы
+function chainReady(pathId, now, camZ) {
   const i = SEA_CHAIN.indexOf(pathId)
   if (i < 0) return null                                             // не в цепочке
+  if (camProgress(pathId, camZ) > 0) return true
   if (i === 0) return seaChain.dolphinsDoneAt !== null && now >= seaChain.dolphinsDoneAt
-  const prev = routeEndAt(SEA_CHAIN[i - 1])
-  return prev !== null && now >= prev
+  const prevId = SEA_CHAIN[i - 1], prev = routeEndAt(prevId)
+  return (prev !== null && now >= prev) || camProgress(prevId, camZ) >= 1
 }
 
 function ParticleModel({ url, pos, rot, scale, count, anim, phase = 0, leapDelay = 0, pathId, follow }) {
@@ -735,14 +744,19 @@ function ParticleModel({ url, pos, rot, scale, count, anim, phase = 0, leapDelay
       const now = performance.now() / 1000
       if (dist > 140) delete routeStart[pathId]                          // далеко позади — сброс
       else if (routeStart[pathId] === undefined) {
-        const ready = chainReady(pathId, now)
+        const ready = chainReady(pathId, now, camera.position.z)
         if (ready === null ? dist < ROUTE_START_DIST : (ready || dist < ROUTE_FORCE_DIST)) routeStart[pathId] = now
       }
       const len = Math.max(routeLength(route), 0.1)
-      // в редакторе, пока объект выбран и не нажато «Проиграть», стоит в начале пути
-      const since = routeStart[pathId] === undefined || routeHold[pathId] ? 0 : now - routeStart[pathId]
+      const total = len + (ROUTE_MAX_GAP[pathId] ?? 0)                    // путь всей группы с провожатыми
+      // общий прогресс группы 0…1: по времени (за duration проходит путь первая модель), но не меньше,
+      // чем прошла камера по участку группы — так группа не отстаёт от летящей камеры.
+      // В редакторе, пока объект выбран и не нажато «Проиграть», стоит в начале пути
+      const timeP = routeStart[pathId] === undefined ? 0
+        : (now - routeStart[pathId]) / ((WATER_MODELS[pathId]?.duration ?? 12) * total / len)
+      const p = routeHold[pathId] ? 0 : Math.max(timeP, camProgress(pathId, camera.position.z))
       // сопровождающие отстают на follow.gap единиц пути: до старта стоят позади начала пути
-      const travelled = (since / (WATER_MODELS[pathId]?.duration ?? 12)) * len - (follow?.gap ?? 0)
+      const travelled = p * total - (follow?.gap ?? 0)
       const u = clamp(travelled / len, 0, 1)
       if (u >= 1) { g.visible = false; return }                             // доплыл и растаял
       samplePath(route, u, _wp)

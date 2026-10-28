@@ -8,9 +8,11 @@ import saved from './trajectories.json'
 // модели, которые плавают по своему пути (их же расставляет SEA_OBJECTS в SpaceScene)
 export const WATER_MODELS = {
   // duration — за сколько секунд модель проходит путь, какой бы длины он ни был
-  sailboat: { label: 'Sailboat', pos: [-13, -3.75, -505], duration: 10 },
-  turtle:   { label: 'Turtle',   pos: [ -6, -3.6,  -550], duration: 9 },
-  ship:     { label: 'Ship',     pos: [ 15, -3.6,  -580], duration: 11 },
+  // camZ — участок пути камеры [начало, конец]: пока камера летит по нему, её движение подгоняет
+  // группу, и та успевает проплыть перед камерой (стоит камера — плывут сами, за duration)
+  sailboat: { label: 'Sailboat', pos: [-13, -3.75, -505], duration: 7, camZ: [-472, -492] },
+  turtle:   { label: 'Turtle', pos: [ -6, -3.6,  -550], duration: 7, camZ: [-492, -522] },
+  ship:     { label: 'Ship', pos: [ 15, -3.6,  -580], duration: 8, camZ: [-522, -560] },
 }
 
 // когда модель на воде начала путь: id → performance.now() в секундах
@@ -22,9 +24,11 @@ export const routeHold = {}
 // потом корабль. dolphinsDoneAt — когда закончилась остановка у дельфинов (performance.now() / 1000)
 export const SEA_CHAIN = ['sailboat', 'turtle', 'ship']
 export const seaChain = { dolphinsDoneAt: null }
+// id → true: путь идёт только по времени, без камеры (в релизе пусто, нужно для SpaceScene)
+export const routeTimeOnly = {}
 export const resetSeaChain = () => {
   seaChain.dolphinsDoneAt = null
-  for (const id of SEA_CHAIN) delete routeStart[id]
+  for (const id of SEA_CHAIN) { delete routeStart[id]; delete routeTimeOnly[id] }
 }
 
 export const getPath = (id) => saved[id] || null
