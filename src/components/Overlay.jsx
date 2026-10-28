@@ -373,7 +373,7 @@ export default function Overlay({ entered, onEnter, onEnterCat, onContactNow, ca
           <p className={styles.subtitle}>Welcome to my</p>
           <h1 className={styles.title}>Portfolio</h1>
           <p className={styles.hint}>
-            <span className={styles.rolePart}>Client relations → Frontend Developer</span>
+            <span className={styles.rolePart}>Creative Frontend Developer</span>
             <span className={styles.roleSep}> · </span>
             <span className={styles.rolePart}>Dreamer · Concept Creator</span>
           </p>
