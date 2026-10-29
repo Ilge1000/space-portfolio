@@ -566,10 +566,20 @@ function LighthouseBeam() {
 // Все дельфины прыгают в одном месте по одной дуге «паровозиком»: с отставанием
 // LEAP_STAGGER друг от друга (leapDelay = 0, 1, 2…). Прыжок запускается остановкой
 // камеры перед ними, до этого дельфины скрыты. Вылетают слева от пути и ныряют справа.
-const LEAP_JUMP     = 1.6                      // с — один прыжок
+const LEAP_JUMP     = 2.1                      // с — один прыжок
 const LEAP_STAGGER  = 0.7                      // с — отставание следующего дельфина
-const LEAP_HALF     = 9                        // полуширина прыжка поперёк пути
-const LEAP_HEIGHT   = 3.2
+const LEAP_HALF     = 15                       // полуширина прыжка поперёк пути
+const LEAP_HEIGHT   = 4.5
+
+// размер дуги под ширину экрана: на узком экране края широкой дуги ушли бы за кадр, и от прыжка
+// осталась бы пологая верхушка — поэтому дуга уменьшается целиком, сохраняя форму
+const _leapSize = { half: LEAP_HALF, height: LEAP_HEIGHT }
+function leapSize(camera, z) {
+  const visHalf = Math.max(camera.position.z - z, 1) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect
+  _leapSize.half = Math.min(LEAP_HALF, visHalf * 0.8)
+  _leapSize.height = LEAP_HEIGHT * _leapSize.half / LEAP_HALF
+  return _leapSize
+}
 const WATER_Y       = -4
 
 // Камера замирает перед дельфинами: при пересечении DOLPHIN_STOP_Z вперёд
@@ -616,7 +626,8 @@ function LeapSplash({ z, delay }) {
     const { tau } = leapState(clock.getElapsedTime(), delay)
     const arr = p.geometry.attributes.position.array
     // [0] — выход из воды слева, [1] — вход справа
-    let bursts = [[pathX - LEAP_HALF, tau, WATER_Y], [pathX + LEAP_HALF, tau - LEAP_JUMP, WATER_Y]]
+    const { half } = leapSize(camera, z)
+    let bursts = [[pathX - half, tau, WATER_Y], [pathX + half, tau - LEAP_JUMP, WATER_Y]]
     const path = getPath('dolphins')
     if (path && path.length > 1) {
       const fl = { path }
@@ -739,7 +750,32 @@ function ParticleModel({ url, pos, rot, scale, count, anim, phase = 0, leapDelay
     // свой путь по воде (редактор): ждёт в начале пути, когда камера подлетает — плывёт ОДИН раз
     // до конца (нос по ходу) и мягко тает. Улетели назад, и модель скрылась — снова ждёт в начале.
     // Покачивание (bob) добавляется ниже, как обычно.
-    const route = pathId && getPath(pathId)
+    // проход перед камерой (лодки, черепахи, корабль) — см. WATER_MODELS в trajectories.js
+    const parade = pathId && WATER_MODELS[pathId]?.camZ ? WATER_MODELS[pathId] : null
+    if (parade) {
+      const now = performance.now() / 1000, camZ = camera.position.z
+      const [w0, w1] = parade.camZ
+      const camP = routeTimeOnly[pathId] ? 0 : clamp((w0 - camZ) / (w0 - w1), 0, 1)
+      if (camZ > w0 + 2 && !routeTimeOnly[pathId]) delete routeStart[pathId]          // вернулись назад — снова ждёт
+      else if (routeStart[pathId] === undefined) {
+        // трогается, когда камера вошла на участок; лодки — ещё и сразу после прыжка дельфинов
+        const afterDolphins = pathId === SEA_CHAIN[0] && seaChain.dolphinsDoneAt !== null && now >= seaChain.dolphinsDoneAt
+        if (camP > 0 || afterDolphins) routeStart[pathId] = now
+      }
+      const timeP = routeStart[pathId] === undefined ? 0 : (now - routeStart[pathId]) / parade.duration
+      const p = routeHold[pathId] ? 0 : Math.max(timeP, camP)
+      if (p >= 1) { g.visible = false; return }                                       // прошли — скрыты
+      const dir = Math.sign(parade.x[1] - parade.x[0])
+      // провожатые: follow.gap — отстают по ходу, follow.side — дальше от камеры (< 0 — ближе)
+      g.position.x = parade.x[0] + (parade.x[1] - parade.x[0]) * p - dir * (follow?.gap ?? 0)
+      g.position.z = parade.z - (follow?.side ?? 0)
+      // модели смотрят вдоль +X; плывут влево — разворот
+      g.rotation.y = (dir > 0 ? 0 : Math.PI) + (parade.heading ?? 0)
+      // появляются из-за края и тают у другого края
+      pts.material.opacity *= THREE.MathUtils.smoothstep(p, 0, 0.08) * (1 - THREE.MathUtils.smoothstep(p, 0.9, 1))
+    }
+    const route = !parade && pathId && getPath(pathId)
+    const onRoute = !!parade || !!(route && route.length > 1)
     if (route && route.length > 1) {
       const now = performance.now() / 1000
       if (dist > 140) delete routeStart[pathId]                          // далеко позади — сброс
@@ -805,13 +841,14 @@ function ParticleModel({ url, pos, rot, scale, count, anim, phase = 0, leapDelay
         g.rotation.z = back ? Math.atan2(dy, -dx) : Math.atan2(dy, dx)
         return
       }
-      g.position.x = pathX - LEAP_HALF + 2 * LEAP_HALF * s
-      g.position.y = pos[1] + LEAP_HEIGHT * Math.sin(Math.PI * s)
-      g.rotation.z = Math.atan2(LEAP_HEIGHT * Math.PI * Math.cos(Math.PI * s), 2 * LEAP_HALF)
+      const { half, height } = leapSize(camera, pos[2])
+      g.position.x = pathX - half + 2 * half * s
+      g.position.y = pos[1] + height * Math.sin(Math.PI * s)
+      g.rotation.z = Math.atan2(height * Math.PI * Math.cos(Math.PI * s), 2 * half)
     } else if (anim === 'swim') {
-      if (!(route && route.length > 1)) g.position.x += Math.sin(t * 0.25) * 2.5
+      if (!onRoute) g.position.x += Math.sin(t * 0.25) * 2.5
       g.position.y += Math.sin(t * 0.8) * 0.12
-      if (!(route && route.length > 1)) g.rotation.y += Math.cos(t * 0.25) * 0.35
+      if (!onRoute) g.rotation.y += Math.cos(t * 0.25) * 0.35
       g.rotation.z += Math.sin(t * 1.2) * 0.05
     } else if (anim === 'spin') {
       g.rotation.y += t * 0.25
@@ -1776,6 +1813,15 @@ function SeaLight() {
 // любое ручное управление (клавиши, колесо) его прерывает
 const AUTO_MAX_SPEED = 60
 
+// В море, пока перед камерой проходят лодки, черепахи и корабль (участки WATER_MODELS.camZ),
+// камера летит медленнее — чтобы успеть их рассмотреть. Скорость меняется плавно на ramp единиц
+// у краёв участка. Автополёт («Contact now») не замедляется
+const SEA_SLOW = { from: -472, to: -578, factor: 0.35, ramp: 6 }
+const seaSlow = (z) => {
+  const inside = clamp((SEA_SLOW.from - z) / SEA_SLOW.ramp, 0, 1) * clamp((z - SEA_SLOW.to) / SEA_SLOW.ramp, 0, 1)
+  return 1 - (1 - SEA_SLOW.factor) * inside
+}
+
 function FlightControls({ onZChange, flyTarget, onFlyEnd, onFreezeChange }) {
   const { camera, gl } = useThree()
   const keys     = useRef({})
@@ -1866,7 +1912,7 @@ function FlightControls({ onZChange, flyTarget, onFlyEnd, onFreezeChange }) {
       return
     }
     const prevZ = camera.position.z
-    const k = keys.current; const speed = 12.5
+    const k = keys.current; const speed = 12.5 * seaSlow(camera.position.z)
     let touchDir = 0
     for (const d of touches.current.values()) touchDir += d
     touchDir = clamp(touchDir, -1, 1)
@@ -1890,7 +1936,7 @@ function FlightControls({ onZChange, flyTarget, onFlyEnd, onFreezeChange }) {
         if (Math.abs(dz) < 0.01) flyZ.current = null
       }
     }
-    camera.position.z -= wheelVel.current * delta * 4
+    camera.position.z -= wheelVel.current * delta * 4 * seaSlow(camera.position.z)
     wheelVel.current *= 0.88
     // дальше берега не летим
     if (camera.position.z < CAMERA_END_Z) { camera.position.z = CAMERA_END_Z; wheelVel.current = 0 }
